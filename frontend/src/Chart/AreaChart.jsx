@@ -1,51 +1,87 @@
-import React, { useEffect } from 'react';
-import * as d3 from 'd3';
+import React, { useEffect, useRef } from "react";
+import * as d3 from "d3";
 
 const AreaChart = ({ data }) => {
+  const chartRef = useRef(null);
+
   useEffect(() => {
     if (data.length > 0) {
-      d3.select("#area-chart").selectAll("*").remove(); 
+      // Clear previous chart if any
+      d3.select(chartRef.current).selectAll("*").remove(); // Set chart dimensions based on the container
 
-      const svg = d3.select("#area-chart")
-        .append("svg")
-        .attr("width", 800)
-        .attr("height", 300);
+      const containerWidth = chartRef.current.clientWidth;
+      const containerHeight = 300; // Fixed height, adjust if needed
 
       const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-      const width = 800 - margin.left - margin.right;
-      const height = 300 - margin.top - margin.bottom;
+      const width = containerWidth - margin.left - margin.right;
+      const height = containerHeight - margin.top - margin.bottom; // Create the SVG container
 
-      const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+      const svg = d3
+        .select(chartRef.current)
+        .append("svg")
+        .attr("width", containerWidth)
+        .attr("height", containerHeight)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`); // X and Y scales
 
-      const x = d3.scaleTime()
-        .domain(d3.extent(data, d => new Date(d.year)))
+      const x = d3
+        .scaleTime()
+        .domain(d3.extent(data, (d) => new Date(d.year)))
         .range([0, width]);
 
-      const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.intensity)])
-        .range([height, 0]);
+      const y = d3
+        .scaleLinear()
+        .domain([0, d3.max(data, (d) => d.intensity)])
+        .range([height, 0]); // Area generator
 
-      const area = d3.area()
-        .x(d => x(new Date(d.year)))
+      const area = d3
+        .area()
+        .x((d) => x(new Date(d.year)))
         .y0(height)
-        .y1(d => y(d.intensity));
+        .y1((d) => y(d.intensity))
+        .curve(d3.curveBasis); // Optional: makes the curve smoother // Gradient for fill
 
-      g.append("path")
+      const defs = svg.append("defs");
+      defs
+        .append("linearGradient")
+        .attr("id", "area-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "0%")
+        .attr("y2", "100%")
+        .selectAll("stop")
+        .data([
+          { offset: "0%", color: "#34D399", opacity: 0.8 }, // Tailwind Green
+          { offset: "100%", color: "#34D399", opacity: 0 }, // Transparent green
+        ])
+        .enter()
+        .append("stop")
+        .attr("offset", (d) => d.offset)
+        .attr("stop-color", (d) => d.color)
+        .attr("stop-opacity", (d) => d.opacity); // Draw the area
+
+      svg
+        .append("path")
         .datum(data)
-        .attr("fill", "lightblue")
-        .attr("d", area);
+        .attr("fill", "url(#area-gradient)")
+        .attr("d", area); // X-axis
 
-      g.append("g")
+      svg
+        .append("g")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x)); // Y-axis
 
-      g.append("g")
-        .call(d3.axisLeft(y));
+      svg.append("g").call(d3.axisLeft(y));
     }
   }, [data]);
 
   return (
-    <div id="area-chart" className="h-64"></div>
+    <div
+      ref={chartRef}
+      className="w-full h-64 bg-white rounded-lg shadow-lg p-4"
+    >
+            {/* The chart will be rendered inside this div */}   {" "}
+    </div>
   );
 };
 

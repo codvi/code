@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 const BarChart = ({ data }) => {
   useEffect(() => {
     if (data.length > 0) {
-      d3.select("#bar-chart").selectAll("*").remove(); // Clear previous chart
+      d3.select("#bar-chart").selectAll("*").remove(); 
 
       const svg = d3.select("#bar-chart")
         .append("svg")
@@ -12,7 +12,7 @@ const BarChart = ({ data }) => {
         .attr("height", 300);
 
       const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-      const width = 800 - margin.left - margin.right;
+      const width = 2950 - margin.left - margin.right;
       const height = 300 - margin.top - margin.bottom;
 
       const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
